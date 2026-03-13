@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, CreditCard, Clock, QrCode } from "lucide-react";
+import { Search, CreditCard, Clock, QrCode, ArrowRight } from "lucide-react";
 import { 
   useGetParkingRecords, 
   useVehicleExit, 
