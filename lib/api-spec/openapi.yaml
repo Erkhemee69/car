@@ -1,15 +1,18 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Авто машины зогсоолын системийн API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: parking
+    description: Parking operations
+  - name: admin
+    description: Admin operations
 paths:
   /healthz:
     get:
@@ -24,6 +27,275 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /parking/enter:
+    post:
+      operationId: vehicleEnter
+      tags: [parking]
+      summary: Record vehicle entry
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VehicleEnterRequest"
+      responses:
+        "200":
+          description: Vehicle entered successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ParkingRecord"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Vehicle already in parking
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /parking/records:
+    get:
+      operationId: getParkingRecords
+      tags: [parking]
+      summary: Get all parking records
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [active, completed, all]
+          description: Filter by status
+        - name: limit
+          in: query
+          schema:
+            type: number
+        - name: offset
+          in: query
+          schema:
+            type: number
+      responses:
+        "200":
+          description: List of parking records
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ParkingRecordsResponse"
+
+  /parking/records/{id}:
+    get:
+      operationId: getParkingRecord
+      tags: [parking]
+      summary: Get a specific parking record
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: number
+      responses:
+        "200":
+          description: Parking record
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ParkingRecord"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /parking/exit/{id}:
+    post:
+      operationId: vehicleExit
+      tags: [parking]
+      summary: Process vehicle exit
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: number
+      responses:
+        "200":
+          description: Exit processed, fee calculated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExitResponse"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /parking/qr/{id}:
+    get:
+      operationId: getPaymentQR
+      tags: [parking]
+      summary: Get payment QR code for a parking record
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: number
+      responses:
+        "200":
+          description: QR code data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QRResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /parking/pay/{id}:
+    post:
+      operationId: processPayment
+      tags: [parking]
+      summary: Process payment and open gate
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: number
+      responses:
+        "200":
+          description: Payment processed, gate opened
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentResponse"
+        "400":
+          description: Bad request or already paid
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /parking/status:
+    get:
+      operationId: getParkingStatus
+      tags: [parking]
+      summary: Get current parking lot status
+      responses:
+        "200":
+          description: Parking lot status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ParkingStatusResponse"
+
+  /admin/stats:
+    get:
+      operationId: getAdminStats
+      tags: [admin]
+      summary: Get admin statistics and revenue report
+      parameters:
+        - name: from
+          in: query
+          schema:
+            type: string
+          description: Start date (ISO string)
+        - name: to
+          in: query
+          schema:
+            type: string
+          description: End date (ISO string)
+      responses:
+        "200":
+          description: Admin statistics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminStatsResponse"
+
+  /admin/tariff:
+    get:
+      operationId: getTariff
+      tags: [admin]
+      summary: Get current tariff settings
+      responses:
+        "200":
+          description: Current tariff
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TariffResponse"
+    put:
+      operationId: updateTariff
+      tags: [admin]
+      summary: Update tariff settings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateTariffRequest"
+      responses:
+        "200":
+          description: Tariff updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TariffResponse"
+
+  /admin/capacity:
+    get:
+      operationId: getCapacity
+      tags: [admin]
+      summary: Get parking lot capacity settings
+      responses:
+        "200":
+          description: Capacity info
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CapacityResponse"
+    put:
+      operationId: updateCapacity
+      tags: [admin]
+      summary: Update parking lot capacity
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateCapacityRequest"
+      responses:
+        "200":
+          description: Capacity updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CapacityResponse"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +306,211 @@ components:
       required:
         - status
 
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+      required:
+        - error
+        - message
+
+    VehicleEnterRequest:
+      type: object
+      properties:
+        plateNumber:
+          type: string
+          description: Vehicle license plate number
+      required:
+        - plateNumber
+
+    ParkingRecord:
+      type: object
+      properties:
+        id:
+          type: number
+        plateNumber:
+          type: string
+        entryTime:
+          type: string
+          format: date-time
+        exitTime:
+          type: string
+          format: date-time
+          nullable: true
+        fee:
+          type: number
+          nullable: true
+        status:
+          type: string
+          enum: [active, pending_payment, paid, completed]
+        durationMinutes:
+          type: number
+          nullable: true
+      required:
+        - id
+        - plateNumber
+        - entryTime
+        - status
+
+    ParkingRecordsResponse:
+      type: object
+      properties:
+        records:
+          type: array
+          items:
+            $ref: "#/components/schemas/ParkingRecord"
+        total:
+          type: number
+      required:
+        - records
+        - total
+
+    ExitResponse:
+      type: object
+      properties:
+        record:
+          $ref: "#/components/schemas/ParkingRecord"
+        fee:
+          type: number
+        durationMinutes:
+          type: number
+        qrCode:
+          type: string
+          description: QR code data URL for payment
+      required:
+        - record
+        - fee
+        - durationMinutes
+        - qrCode
+
+    QRResponse:
+      type: object
+      properties:
+        qrCode:
+          type: string
+          description: QR code data URL
+        fee:
+          type: number
+        recordId:
+          type: number
+      required:
+        - qrCode
+        - fee
+        - recordId
+
+    PaymentResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        record:
+          $ref: "#/components/schemas/ParkingRecord"
+        gateOpened:
+          type: boolean
+        message:
+          type: string
+      required:
+        - success
+        - record
+        - gateOpened
+        - message
+
+    ParkingStatusResponse:
+      type: object
+      properties:
+        totalSpaces:
+          type: number
+        occupiedSpaces:
+          type: number
+        availableSpaces:
+          type: number
+        occupancyRate:
+          type: number
+      required:
+        - totalSpaces
+        - occupiedSpaces
+        - availableSpaces
+        - occupancyRate
+
+    AdminStatsResponse:
+      type: object
+      properties:
+        totalRevenue:
+          type: number
+        totalVehicles:
+          type: number
+        activeVehicles:
+          type: number
+        averageDurationMinutes:
+          type: number
+        revenueByDay:
+          type: array
+          items:
+            $ref: "#/components/schemas/RevenueByDay"
+      required:
+        - totalRevenue
+        - totalVehicles
+        - activeVehicles
+        - averageDurationMinutes
+        - revenueByDay
+
+    RevenueByDay:
+      type: object
+      properties:
+        date:
+          type: string
+        revenue:
+          type: number
+        vehicles:
+          type: number
+      required:
+        - date
+        - revenue
+        - vehicles
+
+    TariffResponse:
+      type: object
+      properties:
+        ratePerHour:
+          type: number
+        minimumFee:
+          type: number
+        freeMinutes:
+          type: number
+      required:
+        - ratePerHour
+        - minimumFee
+        - freeMinutes
+
+    UpdateTariffRequest:
+      type: object
+      properties:
+        ratePerHour:
+          type: number
+        minimumFee:
+          type: number
+        freeMinutes:
+          type: number
+      required:
+        - ratePerHour
+        - minimumFee
+        - freeMinutes
+
+    CapacityResponse:
+      type: object
+      properties:
+        totalSpaces:
+          type: number
+      required:
+        - totalSpaces
+
+    UpdateCapacityRequest:
+      type: object
+      properties:
+        totalSpaces:
+          type: number
+      required:
+        - totalSpaces

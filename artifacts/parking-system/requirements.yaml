@@ -1,0 +1,15 @@
+packages:
+  "framer-motion": "For page transitions, micro-interactions, and gate simulations"
+  "recharts": "For the admin dashboard revenue and usage statistics charts"
+  "date-fns": "For human-readable date formatting and localization"
+  "lucide-react": "For beautiful, consistent iconography across the interface"
+
+images:
+  - path: "artifacts/parking-system/public/images/bg-glow.png"
+    description: "Abstract minimal dark background with subtle cyan and deep blue glowing light leaks, highly polished, dark mode professional"
+    aspect_ratio: "16:9"
+
+notes:
+  - "The frontend relies on @workspace/api-client-react for generated TanStack Query hooks."
+  - "Since there's no direct search-by-plate API, the frontend fetches active records and filters them locally for the exit/payment flow."
+  - "All text is strictly localized to Mongolian as requested."

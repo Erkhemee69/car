@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "Авто машины зогсоолын систем"
+version = "1.0.0"
+id = "artifacts/parking-system"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+localPort = 18181
+name = "web"
+paths = ["/"]
+
+[services.development]
+run = "pnpm --filter @workspace/parking-system run dev"
+
+[services.env]
+PORT = "18181"
+BASE_PATH = "/"
+
+[services.production]
+build = ["pnpm", "--filter", "@workspace/parking-system", "run", "build"]
+publicDir = "artifacts/parking-system/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
