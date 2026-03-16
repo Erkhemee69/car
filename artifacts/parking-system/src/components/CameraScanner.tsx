@@ -129,6 +129,7 @@ export default function CameraScanner({ onDetected, onClose }: CameraScannerProp
 
   const [cameraError, setCameraError] = useState("");
   const [cameraReady, setCameraReady] = useState(false);
+  const [warmingUp, setWarmingUp] = useState(true);
   const [status, setStatus] = useState<"waiting" | "scanning" | "found" | "notfound">("waiting");
   const [candidate, setCandidate] = useState("");
   const [scanCount, setScanCount] = useState(0);
@@ -169,6 +170,11 @@ export default function CameraScanner({ onDetected, onClose }: CameraScannerProp
 
   const runScan = useCallback(async () => {
     if (isScanningRef.current || !videoRef.current || !canvasRef.current || !cameraReady) return;
+    // Ensure the video has actual frames (readyState 2 = HAVE_CURRENT_DATA)
+    if ((videoRef.current.readyState ?? 0) < 2) {
+      scanLoopRef.current = setTimeout(runScan, 500);
+      return;
+    }
     isScanningRef.current = true;
     setStatus("scanning");
 
@@ -236,17 +242,29 @@ export default function CameraScanner({ onDetected, onClose }: CameraScannerProp
   useEffect(() => { startCamera(); return stopCamera; }, [startCamera, stopCamera]);
 
   useEffect(() => {
-    if (cameraReady) {
-      scanLoopRef.current = setTimeout(runScan, 900);
-    }
-    return () => { if (scanLoopRef.current) clearTimeout(scanLoopRef.current); };
+    if (!cameraReady) return;
+    // Wait 2.5s for the camera to auto-focus and expose before first scan
+    setWarmingUp(true);
+    const warmTimer = setTimeout(() => {
+      setWarmingUp(false);
+      scanLoopRef.current = setTimeout(runScan, 100);
+    }, 2500);
+    return () => {
+      clearTimeout(warmTimer);
+      if (scanLoopRef.current) clearTimeout(scanLoopRef.current);
+    };
   }, [cameraReady, runScan]);
 
   const handleRetry = () => {
     setCandidate(""); setRawDebug(""); setStatus("waiting");
+    setWarmingUp(true);
     isScanningRef.current = false;
     if (scanLoopRef.current) clearTimeout(scanLoopRef.current);
-    scanLoopRef.current = setTimeout(runScan, 300);
+    // Short warmup on retry too so camera can re-focus
+    setTimeout(() => {
+      setWarmingUp(false);
+      scanLoopRef.current = setTimeout(runScan, 100);
+    }, 1200);
   };
 
   const handleUse = () => { if (candidate) { onDetected(candidate); onClose(); } };
@@ -322,15 +340,21 @@ export default function CameraScanner({ onDetected, onClose }: CameraScannerProp
 
                     {/* Status chip inside box */}
                     <div className="absolute inset-0 flex items-center justify-center">
-                      {status === "waiting" && (
+                      {warmingUp && (
+                        <span className="text-white/50 text-xs bg-black/60 px-3 py-1 rounded-full flex items-center gap-1.5">
+                          <motion.span animate={{ opacity: [1, 0.3, 1] }} transition={{ duration: 1, repeat: Infinity }}>●</motion.span>
+                          Камер фокус барьж байна...
+                        </span>
+                      )}
+                      {!warmingUp && status === "waiting" && (
                         <span className="text-white/40 text-xs bg-black/50 px-2 py-1 rounded-full">Бэлдэж байна...</span>
                       )}
-                      {status === "scanning" && (
+                      {!warmingUp && status === "scanning" && (
                         <span className="text-primary text-xs bg-black/70 px-3 py-1 rounded-full flex items-center gap-1.5 font-medium">
                           <Zap className="w-3 h-3" /> Уншиж байна...
                         </span>
                       )}
-                      {status === "notfound" && (
+                      {!warmingUp && status === "notfound" && (
                         <span className="text-yellow-400 text-xs bg-black/70 px-3 py-1 rounded-full font-medium">
                           Дугаар олдсонгүй — дахин оролдож байна...
                         </span>
