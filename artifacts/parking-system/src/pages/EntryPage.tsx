@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { format } from "date-fns";
-import { Car, Camera, AlertCircle, ArrowRight } from "lucide-react";
+import { Car, Camera, AlertCircle, ArrowRight, ScanLine } from "lucide-react";
 import { 
   useGetParkingStatus, 
   useVehicleEnter, 
@@ -9,11 +9,13 @@ import {
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
+import CameraScanner from "@/components/CameraScanner";
 
 const MOCK_PLATES = ["1234УБА", "9988СУА", "7777ТӨВ", "4567ДАР", "0001УБҮ"];
 
 export default function EntryPage() {
   const [plate, setPlate] = useState("");
+  const [cameraOpen, setCameraOpen] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -45,6 +47,11 @@ export default function EntryPage() {
     setPlate(random);
   };
 
+  const handleCameraDetected = (detected: string) => {
+    setPlate(detected);
+    toast({ title: "Дугаар танигдлаа!", description: `Камераас: ${detected}` });
+  };
+
   const handleEnter = (e: React.FormEvent) => {
     e.preventDefault();
     if (!plate) return;
@@ -68,7 +75,7 @@ export default function EntryPage() {
             
             <h2 className="text-xl font-semibold text-white flex items-center gap-2 mb-6">
               <Camera className="w-5 h-5 text-primary" />
-              Камерын симуляц
+              Дугаар оруулах
             </h2>
 
             <form onSubmit={handleEnter} className="space-y-6 relative z-10">
@@ -82,14 +89,25 @@ export default function EntryPage() {
                     placeholder="0000ААА"
                     className="flex-1 bg-black/40 border border-white/10 rounded-xl px-5 py-4 text-2xl font-display tracking-widest text-white placeholder:text-white/20 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all uppercase"
                   />
-                  <button
-                    type="button"
-                    onClick={handleSimulateScan}
-                    className="px-6 py-4 rounded-xl bg-secondary hover:bg-secondary/80 text-white font-medium border border-white/5 transition-colors whitespace-nowrap flex items-center justify-center gap-2"
-                  >
-                    <Camera className="w-4 h-4" /> Уншуулах
-                  </button>
                 </div>
+              </div>
+
+              {/* Camera buttons */}
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setCameraOpen(true)}
+                  className="px-4 py-3 rounded-xl bg-primary/10 hover:bg-primary/20 text-primary font-medium border border-primary/30 hover:border-primary/60 transition-all flex items-center justify-center gap-2"
+                >
+                  <ScanLine className="w-4 h-4" /> Камер нээх
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSimulateScan}
+                  className="px-4 py-3 rounded-xl bg-secondary hover:bg-secondary/80 text-white font-medium border border-white/5 transition-colors flex items-center justify-center gap-2"
+                >
+                  <Camera className="w-4 h-4" /> Симуляц
+                </button>
               </div>
 
               <button
@@ -205,6 +223,16 @@ export default function EntryPage() {
           </div>
         </div>
       </div>
+
+      {/* Camera Scanner Modal */}
+      <AnimatePresence>
+        {cameraOpen && (
+          <CameraScanner
+            onDetected={handleCameraDetected}
+            onClose={() => setCameraOpen(false)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }
