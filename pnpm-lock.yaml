@@ -129,6 +129,9 @@ importers:
       '@types/qrcode':
         specifier: ^1.5.6
         version: 1.5.6
+      drizzle-kit:
+        specifier: ^0.31.10
+        version: 0.31.10
       esbuild:
         specifier: ^0.27.3
         version: 0.27.7
