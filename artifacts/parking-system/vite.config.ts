@@ -4,29 +4,19 @@ import tailwindcss from "@tailwindcss/vite";
 import path from "path";
 
 export default defineConfig({
+  base: "/",
   plugins: [
     react(),
     tailwindcss(),
   ],
   resolve: {
     alias: {
-      "@": path.resolve(import.meta.dirname, "src"),
-      "@assets": path.resolve(import.meta.dirname, "../../attached_assets"),
+      "@": path.resolve(__dirname, "./src"),
     },
   },
   build: {
     outDir: "dist",
+    assetsDir: "assets",
     emptyOutDir: true,
-  },
-  server: {
-    port: 3000,
-    host: "0.0.0.0",
-    proxy: {
-      "/api": {
-        // Локал дээр ажиллах үед backend рүүгээ хандана
-        target: "http://localhost:5000",
-        changeOrigin: true,
-      },
-    },
-  },
+  }
 });
