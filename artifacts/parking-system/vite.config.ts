@@ -1,32 +1,27 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import tailwindcss from "@tailwindcss/vite";
 import path from "path";
 
-// Vercel дээр PORT байхгүй үед алдаа гаргахгүй байх тохиргоо
-const port = 3000;
-
 export default defineConfig({
-  plugins: [react()],
+  // Vercel дээр '/'-оор эхлэх нь зөв
+  base: "/",
+  plugins: [
+    react(),
+    tailwindcss(),
+  ],
   resolve: {
     alias: {
       "@": path.resolve(import.meta.dirname, "src"),
-      "@assets": path.resolve(import.meta.dirname, "..", "..", "attached_assets"),
+      // Assets-ийн замыг илүү найдвартай болгох
+      "@assets": path.resolve(import.meta.dirname, "../../attached_assets"),
     },
   },
-  root: path.resolve(import.meta.dirname),
+  // Root-ийг заавал хатуу заах шаардлагагүй, Vercel өөрөө олдог
   build: {
     outDir: "dist",
     emptyOutDir: true,
-  },
-  server: {
-    port,
-    host: "0.0.0.0",
-    proxy: {
-      "/api": {
-        target: process.env.VITE_API_URL || "http://localhost:5000",
-        changeOrigin: true,
-        secure: false,
-      },
-    },
+    // CSS болон JS-ийг зөв баглах тохиргоо
+    assetsDir: "assets",
   },
 });
