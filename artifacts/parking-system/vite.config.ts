@@ -4,8 +4,6 @@ import tailwindcss from "@tailwindcss/vite";
 import path from "path";
 
 export default defineConfig({
-  // Vercel дээр '/'-оор эхлэх нь зөв
-  base: "/",
   plugins: [
     react(),
     tailwindcss(),
@@ -13,15 +11,22 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(import.meta.dirname, "src"),
-      // Assets-ийн замыг илүү найдвартай болгох
       "@assets": path.resolve(import.meta.dirname, "../../attached_assets"),
     },
   },
-  // Root-ийг заавал хатуу заах шаардлагагүй, Vercel өөрөө олдог
   build: {
     outDir: "dist",
     emptyOutDir: true,
-    // CSS болон JS-ийг зөв баглах тохиргоо
-    assetsDir: "assets",
+  },
+  server: {
+    port: 3000,
+    host: "0.0.0.0",
+    proxy: {
+      "/api": {
+        // Локал дээр ажиллах үед backend рүүгээ хандана
+        target: "http://localhost:5000",
+        changeOrigin: true,
+      },
+    },
   },
 });

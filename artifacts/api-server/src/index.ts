@@ -1,19 +1,19 @@
 import app from "./app";
 
-const rawPort = process.env["PORT"];
+// Render-ээс өгсөн PORT-ыг авна, байхгүй бол 5000. 
+// "0.0.0.0" гэж зааж өгөх нь Render-т заавал хэрэгтэй байдаг.
+const PORT = Number(process.env.PORT) || 5000;
 
-if (!rawPort) {
-  throw new Error(
-    "PORT environment variable is required but was not provided.",
-  );
-}
+const startServer = () => {
+  try {
+    app.listen(PORT, "0.0.0.0", () => {
+      console.log(`🚀 Server is running on port ${PORT}`);
+      console.log(`🔗 Database URL is ${process.env.DATABASE_URL ? "Set" : "Not Set"}`);
+    });
+  } catch (error) {
+    console.error("❌ Failed to start server:", error);
+    process.exit(1);
+  }
+};
 
-const port = Number(rawPort);
-
-if (Number.isNaN(port) || port <= 0) {
-  throw new Error(`Invalid PORT value: "${rawPort}"`);
-}
-
-app.listen(port, () => {
-  console.log(`Server listening on port ${port}`);
-});
+startServer();
