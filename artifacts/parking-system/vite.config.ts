@@ -5,18 +5,18 @@ import path from "path";
 
 export default defineConfig({
   base: "/",
-  plugins: [
-    react(),
-    tailwindcss(),
-  ],
+  plugins: [react(), tailwindcss()],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
     },
   },
-  build: {
-    outDir: "dist",
-    assetsDir: "assets",
-    emptyOutDir: true,
-  }
+  server: {
+    proxy: {
+      "/api": {
+        target: "https://car-89l8.onrender.com",
+        changeOrigin: true,
+      },
+    },
+  },
 });
