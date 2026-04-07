@@ -1,0 +1,8 @@
+{
+    "rewrites": [
+        {
+            "source": "/api/:path*",
+            "destination": "https://car-89l8.onrender.com/api/:path*"
+        }
+    ]
+}
