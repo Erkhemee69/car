@@ -137,18 +137,21 @@ export default function AdminPage() {
             <div className="h-80 w-full">
               {stats?.revenueByDay && stats.revenueByDay.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={stats.revenueByDay} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                  <BarChart
+                    data={stats?.revenueByDay?.map(item => ({
+                      ...item,
+                      // Огноог график дээр харуулахын тулд текст формат руу хөрвүүлэх
+                      displayDate: format(new Date(item.date), 'MM/dd')
+                    }))}
+                    margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
+                  >
                     <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" vertical={false} />
                     <XAxis
-                      dataKey="date"
+                      dataKey="displayDate" // date-ийн оронд displayDate-ийг ашиглана
                       stroke="#888888"
                       fontSize={12}
                       tickLine={false}
                       axisLine={false}
-                      tickFormatter={(val) => {
-                        const date = new Date(val);
-                        return isValid(date) ? format(date, 'MM/dd') : val;
-                      }}
                     />
                     <YAxis
                       stroke="#888888"
