@@ -25,7 +25,7 @@ function calculateFee(
   return { fee: Math.ceil(fee), durationMinutes };
 }
 
-router.post("/enter", async (req, res) => {
+router.post("/enter", (async (req: any, res: any) => {
   const { plateNumber } = req.body as { plateNumber?: string };
 
   if (!plateNumber || !plateNumber.trim()) {
@@ -48,7 +48,7 @@ router.post("/enter", async (req, res) => {
   const totalSpaces = capacityRows[0]?.totalSpaces ?? 50;
 
   const activeCount = await db
-    .select({ count: count() })
+    .select({ count: sql<number>`COUNT(*)` })
     .from(parkingRecordsTable)
     .where(eq(parkingRecordsTable.status, "active"));
 
@@ -62,9 +62,9 @@ router.post("/enter", async (req, res) => {
     .returning();
 
   res.json(record);
-});
+}) as any);
 
-router.get("/records", async (req, res) => {
+router.get("/records", (async (req: any, res: any) => {
   const { status, limit = "50", offset = "0" } = req.query as {
     status?: string;
     limit?: string;
@@ -87,13 +87,13 @@ router.get("/records", async (req, res) => {
     .offset(Number(offset));
 
   const totalRes = await db
-    .select({ count: count() })
+    .select({ count: sql<number>`COUNT(*)` })
     .from(parkingRecordsTable);
 
   res.json({ records, total: totalRes[0]?.count ?? 0 });
-});
+}) as any);
 
-router.get("/records/:id", async (req, res) => {
+router.get("/records/:id", (async (req: any, res: any) => {
   const id = Number(req.params.id);
   const [record] = await db
     .select()
@@ -106,9 +106,9 @@ router.get("/records/:id", async (req, res) => {
   }
 
   res.json(record);
-});
+}) as any);
 
-router.post("/exit/:id", async (req, res) => {
+router.post("/exit/:id", (async (req: any, res: any) => {
   const id = Number(req.params.id);
 
   const [record] = await db
@@ -147,9 +147,9 @@ router.post("/exit/:id", async (req, res) => {
   const qrCode = await QRCode.toDataURL(paymentData);
 
   res.json({ record: updated, fee, durationMinutes, qrCode });
-});
+}) as any);
 
-router.get("/qr/:id", async (req, res) => {
+router.get("/qr/:id", (async (req: any, res: any) => {
   const id = Number(req.params.id);
 
   const [record] = await db
@@ -166,9 +166,9 @@ router.get("/qr/:id", async (req, res) => {
   const qrCode = await QRCode.toDataURL(paymentData);
 
   res.json({ qrCode, fee: record.fee ?? 0, recordId: id });
-});
+}) as any);
 
-router.post("/pay/:id", async (req, res) => {
+router.post("/pay/:id", (async (req: any, res: any) => {
   const id = Number(req.params.id);
 
   const [record] = await db
@@ -201,14 +201,14 @@ router.post("/pay/:id", async (req, res) => {
     gateOpened: true,
     message: "Төлбөр амжилттай төлөгдлөө. Хаалт нээгдэж байна...",
   });
-});
+}) as any);
 
-router.get("/status", async (req, res) => {
+router.get("/status", (async (req: any, res: any) => {
   const capacityRows = await db.select().from(parkingCapacityTable).limit(1);
   const totalSpaces = capacityRows[0]?.totalSpaces ?? 50;
 
   const activeCount = await db
-    .select({ count: count() })
+    .select({ count: sql<number>`COUNT(*)` })
     .from(parkingRecordsTable)
     .where(eq(parkingRecordsTable.status, "active"));
 
@@ -217,6 +217,6 @@ router.get("/status", async (req, res) => {
   const occupancyRate = totalSpaces > 0 ? (occupiedSpaces / totalSpaces) * 100 : 0;
 
   res.json({ totalSpaces, occupiedSpaces, availableSpaces, occupancyRate });
-});
+}) as any);
 
 export default router;

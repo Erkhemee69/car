@@ -6,7 +6,7 @@ import { eq, and, gte, lte, sql, count, avg, sum } from "drizzle-orm";
 const router = Router();
 
 // 1. Статистик мэдээлэл авах
-router.get("/stats", async (req: Request, res: Response) => {
+router.get("/stats", (async (req: any, res: any) => {
   try {
     const { from, to } = req.query as { from?: string; to?: string };
 
@@ -33,7 +33,7 @@ router.get("/stats", async (req: Request, res: Response) => {
 
     // Одоо идэвхтэй байгаа машинууд
     const activeCount = await db
-      .select({ count: count() })
+      .select({ count: sql<number>`COUNT(*)` })
       .from(parkingRecordsTable)
       .where(eq(parkingRecordsTable.status, "active"));
 
@@ -65,10 +65,10 @@ router.get("/stats", async (req: Request, res: Response) => {
     console.error("Stats Error:", error);
     res.status(500).json({ error: "Статистик авахад алдаа гарлаа" });
   }
-});
+}) as any);
 
 // 2. Тарифын тохиргоо авах
-router.get("/tariff", async (_req: Request, res: Response) => {
+router.get("/tariff", (async (_req: any, res: any) => {
   try {
     const rows = await db.select().from(tariffSettingsTable).limit(1);
     let tariff = rows[0];
@@ -85,10 +85,10 @@ router.get("/tariff", async (_req: Request, res: Response) => {
   } catch (error) {
     res.status(500).json({ error: "Тариф авахад алдаа гарлаа" });
   }
-});
+}) as any);
 
 // 3. Тариф шинэчлэх
-router.put("/tariff", async (req: Request, res: Response) => {
+router.put("/tariff", (async (req: any, res: any) => {
   try {
     const { ratePerHour, minimumFee, freeMinutes } = req.body;
     const rows = await db.select().from(tariffSettingsTable).limit(1);
@@ -111,10 +111,10 @@ router.put("/tariff", async (req: Request, res: Response) => {
   } catch (error) {
     res.status(500).json({ error: "Тариф шинэчлэхэд алдаа гарлаа" });
   }
-});
+}) as any);
 
 // 4. Багтаамж авах
-router.get("/capacity", async (_req: Request, res: Response) => {
+router.get("/capacity", (async (_req: any, res: any) => {
   try {
     const rows = await db.select().from(parkingCapacityTable).limit(1);
     let cap = rows[0];
@@ -127,10 +127,10 @@ router.get("/capacity", async (_req: Request, res: Response) => {
   } catch (error) {
     res.status(500).json({ error: "Багтаамж авахад алдаа гарлаа" });
   }
-});
+}) as any);
 
 // 5. Багтаамж шинэчлэх
-router.put("/capacity", async (req: Request, res: Response) => {
+router.put("/capacity", (async (req: any, res: any) => {
   try {
     const { totalSpaces } = req.body;
     const rows = await db.select().from(parkingCapacityTable).limit(1);
@@ -150,6 +150,6 @@ router.put("/capacity", async (req: Request, res: Response) => {
   } catch (error) {
     res.status(500).json({ error: "Багтаамж шинэчлэхэд алдаа гарлаа" });
   }
-});
+}) as any);
 
 export default router;
