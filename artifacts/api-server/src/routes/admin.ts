@@ -5,65 +5,51 @@ import { eq, and, gte, lte, sql, count, avg, sum } from "drizzle-orm";
 
 const router = Router();
 
-// 1. Статистик мэдээлэл авах
 router.get("/stats", (async (req: any, res: any) => {
   try {
     const { from, to } = req.query as { from?: string; to?: string };
 
-    let whereClause;
-    if (from && to) {
-      whereClause = and(
-        gte(parkingRecordsTable.entryTime, new Date(from)),
-        lte(parkingRecordsTable.entryTime, new Date(to))
-      );
-    }
+    // 1. Нийт статистикийг SQL-ээр биш Drizzle-ийн select ашиглаад тус тусад нь авах (илүү аюулгүй)
+    const statsResult = await db.select({
+      totalRevenue: sql<number>`COALESCE(SUM(fee), 0)`,
+      totalVehicles: sql<number>`COUNT(*)`,
+      averageDuration: sql<number>`COALESCE(AVG(duration_minutes), 0)`
+    }).from(parkingRecordsTable);
 
-    // Нийт статистик - SQL ашиглан хувилбарын зөрүүний алдаанаас сэргийлж байна
-    const statsQuery = sql`
-      SELECT 
-        COALESCE(SUM(fee), 0)::float as "totalRevenue",
-        COUNT(*)::int as "totalVehicles",
-        COALESCE(AVG(duration_minutes), 0)::float as "averageDuration"
-      FROM parking_records
-      ${whereClause ? sql`WHERE ${whereClause}` : sql``}
-    `;
-
-    const stats = await db.execute(statsQuery);
-    const statsResult = (stats.rows[0] as any) || { totalRevenue: 0, totalVehicles: 0, averageDuration: 0 };
-
-    // Одоо идэвхтэй байгаа машинууд
+    // 2. Одоо идэвхтэй байгаа машинууд
     const activeCount = await db
       .select({ count: sql<number>`COUNT(*)` })
       .from(parkingRecordsTable)
       .where(eq(parkingRecordsTable.status, "active"));
 
-    // Сүүлийн 30 хоногийн орлогыг өдрөөр (SQL query)
-    // Сүүлийн 30 хоногийн орлогыг авах хэсгийг энгийн болгох
-    const revenueByDayQuery = await db.execute(sql`
-  SELECT 
-    TO_CHAR(entry_time, 'YYYY-MM-DD') as date,
-    COALESCE(SUM(fee), 0)::float as revenue,
-    COUNT(*)::int as vehicles
-  FROM parking_records
-  WHERE entry_time >= NOW() - INTERVAL '30 days'
-  GROUP BY TO_CHAR(entry_time, 'YYYY-MM-DD')
-  ORDER BY date DESC
-  LIMIT 30
-`);
+    // 3. Сүүлийн 7 (эсвэл 30) хоногийн график
+    // TO_CHAR ашиглах нь DATE_TRUNC-аас илүү хурдан бөгөөд алдаа багатай
+    const dailyStats = await db.execute(sql`
+      SELECT 
+        TO_CHAR(entry_time, 'YYYY-MM-DD') as date,
+        COALESCE(SUM(fee), 0)::float as revenue,
+        COUNT(*)::int as vehicles
+      FROM parking_records
+      WHERE entry_time >= NOW() - INTERVAL '30 days'
+      GROUP BY TO_CHAR(entry_time, 'YYYY-MM-DD')
+      ORDER BY date ASC
+    `);
 
+    // 4. Хариуг илгээх
     res.json({
-      totalRevenue: Number(statsResult.totalRevenue ?? 0),
-      totalVehicles: Number(statsResult.totalVehicles ?? 0),
+      totalRevenue: Number(statsResult[0]?.totalRevenue ?? 0),
+      totalVehicles: Number(statsResult[0]?.totalVehicles ?? 0),
       activeVehicles: Number(activeCount[0]?.count ?? 0),
-      averageDurationMinutes: Math.round(Number(statsResult.averageDuration ?? 0)),
-      revenueByDay: (revenueByDayQuery.rows as any[]).map(r => ({
+      averageDurationMinutes: Math.round(Number(statsResult[0]?.averageDuration ?? 0)),
+      revenueByDay: (dailyStats.rows as any[]).map(r => ({
         date: String(r.date),
         revenue: Number(r.revenue),
         vehicles: Number(r.vehicles),
       })),
     });
+
   } catch (error) {
-    console.error("Stats Error:", error);
+    console.error("Dashboard Stats Error Detail:", error); // Терминал дээр яг ямар алдаа гарч байгааг харах
     res.status(500).json({ error: "Статистик авахад алдаа гарлаа" });
   }
 }) as any);
