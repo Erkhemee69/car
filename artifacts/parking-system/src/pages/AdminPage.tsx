@@ -25,7 +25,7 @@ export default function AdminPage() {
   const [tariffForm, setTariffForm] = useState({ ratePerHour: 0, minimumFee: 0, freeMinutes: 0 });
   const [capacityForm, setCapacityForm] = useState({ totalSpaces: 0 });
 
-  // Queries - Хугацааг ISOString болгож илгээнэ
+  // Queries - Сүүлийн 7 хоногийн статистик
   const { data: stats, isLoading: isStatsLoading, refetch: refetchStats } = useGetAdminStats({
     from: subDays(new Date(), 7).toISOString(),
     to: new Date().toISOString()
@@ -35,17 +35,13 @@ export default function AdminPage() {
   const { data: tariff } = useGetTariff();
   const { data: capacity } = useGetCapacity();
 
-  // ✅ ЗАСВАР: Дата ирэх үед Form-ын утгуудыг useEffect-ээр нэг удаа шинэчилнэ
+  // Дата ирэх үед Form-ын утгуудыг шинэчлэх
   useEffect(() => {
-    if (tariff) {
-      setTariffForm(tariff);
-    }
+    if (tariff) setTariffForm(tariff);
   }, [tariff]);
 
   useEffect(() => {
-    if (capacity) {
-      setCapacityForm(capacity);
-    }
+    if (capacity) setCapacityForm(capacity);
   }, [capacity]);
 
   // Mutations
@@ -78,11 +74,12 @@ export default function AdminPage() {
     updateCapacity.mutate({ data: capacityForm });
   };
 
+  // Статистик картуудын өгөгдөл
   const statCards = [
-    { title: "Нийт орлого", value: `${(stats?.totalRevenue || 0).toLocaleString()} ₮`, icon: TrendingUp, color: "text-emerald-400", bg: "bg-emerald-400/10" },
-    { title: "Идэвхтэй машин", value: stats?.activeVehicles || 0, icon: Car, color: "text-primary", bg: "bg-primary/10" },
-    { title: "Нийт үйлчлүүлсэн", value: stats?.totalVehicles || 0, icon: Car, color: "text-blue-400", bg: "bg-blue-400/10" },
-    { title: "Дундаж хугацаа", value: `${stats?.averageDurationMinutes || 0} мин`, icon: Clock, color: "text-purple-400", bg: "bg-purple-400/10" },
+    { title: "Нийт орлого", value: `${(stats?.totalRevenue ?? 0).toLocaleString()} ₮`, icon: TrendingUp, color: "text-emerald-400", bg: "bg-emerald-400/10" },
+    { title: "Идэвхтэй машин", value: stats?.activeVehicles ?? 0, icon: Car, color: "text-primary", bg: "bg-primary/10" },
+    { title: "Нийт үйлчлүүлсэн", value: stats?.totalVehicles ?? 0, icon: Car, color: "text-blue-400", bg: "bg-blue-400/10" },
+    { title: "Дундаж хугацаа", value: `${stats?.averageDurationMinutes ?? 0} мин`, icon: Clock, color: "text-purple-400", bg: "bg-purple-400/10" },
   ];
 
   return (
