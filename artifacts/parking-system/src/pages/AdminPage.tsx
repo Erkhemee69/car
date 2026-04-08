@@ -80,7 +80,7 @@ export default function AdminPage() {
     { title: "Нийт орлого", value: `${(stats?.totalRevenue ?? 0).toLocaleString()} ₮`, icon: TrendingUp, color: "text-emerald-400", bg: "bg-emerald-400/10" },
     { title: "Идэвхтэй машин", value: stats?.activeVehicles ?? 0, icon: Car, color: "text-primary", bg: "bg-primary/10" },
     { title: "Нийт үйлчлүүлсэн", value: stats?.totalVehicles ?? 0, icon: Car, color: "text-blue-400", bg: "bg-blue-400/10" },
-    { title: "Дундаж хугацаа", value: `${stats?.averageDurationMinutes ?? 0} мин`, icon: Clock, color: "text-purple-400", bg: "bg-purple-400/10" },
+    { title: "Дундаж хугацаа", value: `${Math.round(stats?.averageDurationMinutes ?? 0)} мин`, icon: Clock, color: "text-purple-400", bg: "bg-purple-400/10" },
   ];
 
   if (isError) return <div className="text-white p-10 text-center glass-panel m-10">Статистик ачаалахад алдаа гарлаа.</div>;
