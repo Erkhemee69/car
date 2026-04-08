@@ -1,35 +1,45 @@
-import dotenv from 'dotenv';
-import path from 'path';
+import 'dotenv/config';
 import express, { Express } from 'express';
 import cors from 'cors';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-// 1. .env файлыг backend хавтасны үндсэн хэсгээс унших
-dotenv.config({ path: path.resolve(__dirname, '../.env') });
+// routes хавтас доторх index.ts-ийг дуудаж байна
+import { registerRoutes } from './routes/index.js';
 
-import { registerRoutes } from './routes';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app: Express = express();
 
-// 2. Датабааз холболтын шалгалт (Терминал дээр харагдана)
-console.log('--- SYSTEM CHECK ---');
+// 1. Хамгийн чухал: CORS тохиргоо (Dashboard дата авахад хэрэгтэй)
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
+}));
+
+app.use(express.json());
+
+// 2. Системийн шалгалт
+console.log('--- BACKEND STARTING ---');
 if (process.env.DATABASE_URL) {
-  console.log('✅ DATABASE_URL олдлоо. Neon-той холбогдоход бэлэн.');
+  console.log('✅ DATABASE_URL холбогдоход бэлэн.');
 } else {
   console.error('❌ АЛДАА: DATABASE_URL олдсонгүй! .env файлыг шалга.');
 }
 
-app.use(express.json());
-
-// 3. CORS тохиргоо - Vercel болон Local-ыг хоёуланг нь зөвшөөрөх
-app.use(cors({
-  origin: '*',
-  credentials: true
-}));
-
-// 4. Route-үүдийг бүртгэх
-registerRoutes(app);
+// 3. Routes бүртгэх
+try {
+  registerRoutes(app);
+  console.log('✅ Бүх API замууд (Admin, Parking, Health) амжилттай ачааллаа.');
+} catch (error) {
+  console.error('❌ registerRoutes-ийг ачаалахад алдаа гарлаа:', error);
+}
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`🚀 Server is running on port ${PORT}`);
+
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`🚀 Сервер http://localhost:${PORT} дээр ажиллаж байна`);
 });

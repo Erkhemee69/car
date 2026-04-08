@@ -35,7 +35,7 @@ export default function AdminPage() {
   const { data: tariff } = useGetTariff();
   const { data: capacity } = useGetCapacity();
 
-  // Дата ирэх үед Form-ын утгуудыг шинэчлэх
+  // ✅ Дата ирэх үед Form-ын утгуудыг шинэчлэх
   useEffect(() => {
     if (tariff) setTariffForm(tariff);
   }, [tariff]);
@@ -74,7 +74,7 @@ export default function AdminPage() {
     updateCapacity.mutate({ data: capacityForm });
   };
 
-  // Статистик картуудын өгөгдөл
+  // ✅ Статистик картуудын өгөгдөл - Stats undefined байхаас сэргийлсэн
   const statCards = [
     { title: "Нийт орлого", value: `${(stats?.totalRevenue ?? 0).toLocaleString()} ₮`, icon: TrendingUp, color: "text-emerald-400", bg: "bg-emerald-400/10" },
     { title: "Идэвхтэй машин", value: stats?.activeVehicles ?? 0, icon: Car, color: "text-primary", bg: "bg-primary/10" },

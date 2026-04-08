@@ -13,6 +13,7 @@
     "@workspace/db": "workspace:*",
     "cookie-parser": "^1.4.7",
     "cors": "^2",
+    "dotenv": "^16.4.5",
     "drizzle-orm": "catalog:",
     "express": "^5",
     "qrcode": "^1.5.4"

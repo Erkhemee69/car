@@ -1,12 +1,15 @@
-import { Router, type IRouter } from "express";
-import healthRouter from "./health";
-import parkingRouter from "./parking";
-import adminRouter from "./admin";
+import { Express } from "express";
+import adminRouter from "./admin.js";
+import parkingRouter from "./parking.js";
+import healthRouter from "./health.js";
 
-const router: IRouter = Router();
+export function registerRoutes(app: Express) {
+    // Бүх admin-тай холбоотой замууд /api/admin гэж эхэлнэ
+    app.use("/api/admin", adminRouter);
 
-router.use(healthRouter);
-router.use("/parking", parkingRouter);
-router.use("/admin", adminRouter);
+    // Бусад замууд
+    app.use("/api/parking", parkingRouter);
+    app.use("/api/health", healthRouter);
 
-export default router;
+    console.log("✅ Admin, Parking, Health замууд бүртгэгдлээ.");
+}
