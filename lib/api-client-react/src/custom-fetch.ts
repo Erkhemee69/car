@@ -25,6 +25,13 @@ function isUrl(input: RequestInfo | URL): input is URL {
   return typeof URL !== "undefined" && input instanceof URL;
 }
 
+const getBaseUrl = () => {
+  // @ts-ignore
+  const envUrl = import.meta.env?.VITE_API_URL;
+  if (envUrl) return envUrl.endsWith("/") ? envUrl.slice(0, -1) : envUrl;
+  return "";
+};
+
 function resolveUrl(input: RequestInfo | URL): string {
   if (typeof input === "string") return input;
   if (isUrl(input)) return input.toString();
@@ -298,8 +305,13 @@ export async function customFetch<T = unknown>(
   }
 
   const requestInfo = { method, url: resolveUrl(input) };
+  
+  const baseUrl = getBaseUrl();
+  const fullUrl = (baseUrl && requestInfo.url.startsWith("/")) 
+    ? `${baseUrl}${requestInfo.url}` 
+    : input;
 
-  const response = await fetch(input, { ...init, method, headers });
+  const response = await fetch(fullUrl, { ...init, method, headers });
 
   if (!response.ok) {
     const errorData = await parseErrorBody(response, method);

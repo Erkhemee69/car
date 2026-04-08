@@ -18,18 +18,18 @@ router.get("/stats", async (req: Request, res: Response) => {
       );
     }
 
-    // Нийт статистик
-    const statsQuery = db
-      .select({
-        totalRevenue: sum(parkingRecordsTable.fee),
-        totalVehicles: count(parkingRecordsTable.id),
-        averageDuration: avg(parkingRecordsTable.durationMinutes),
-      })
-      .from(parkingRecordsTable);
+    // Нийт статистик - SQL ашиглан хувилбарын зөрүүний алдаанаас сэргийлж байна
+    const statsQuery = sql`
+      SELECT 
+        COALESCE(SUM(fee), 0)::float as "totalRevenue",
+        COUNT(*)::int as "totalVehicles",
+        COALESCE(AVG(duration_minutes), 0)::float as "averageDuration"
+      FROM parking_records
+      ${whereClause ? sql`WHERE ${whereClause}` : sql``}
+    `;
 
-    const stats = whereClause
-      ? await statsQuery.where(whereClause)
-      : await statsQuery;
+    const stats = await db.execute(statsQuery);
+    const statsResult = (stats.rows[0] as any) || { totalRevenue: 0, totalVehicles: 0, averageDuration: 0 };
 
     // Одоо идэвхтэй байгаа машинууд
     const activeCount = await db
@@ -49,8 +49,6 @@ router.get("/stats", async (req: Request, res: Response) => {
       ORDER BY date DESC
       LIMIT 30
     `);
-
-    const statsResult = stats[0] || { totalRevenue: "0", totalVehicles: 0, averageDuration: "0" };
 
     res.json({
       totalRevenue: Number(statsResult.totalRevenue ?? 0),
