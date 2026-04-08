@@ -38,17 +38,18 @@ router.get("/stats", (async (req: any, res: any) => {
       .where(eq(parkingRecordsTable.status, "active"));
 
     // Сүүлийн 30 хоногийн орлогыг өдрөөр (SQL query)
+    // Сүүлийн 30 хоногийн орлогыг авах хэсгийг энгийн болгох
     const revenueByDayQuery = await db.execute(sql`
-      SELECT 
-        DATE(entry_time AT TIME ZONE 'Asia/Ulaanbaatar') as date,
-        COALESCE(SUM(fee), 0)::float as revenue,
-        COUNT(*)::int as vehicles
-      FROM parking_records
-      WHERE entry_time >= NOW() - INTERVAL '30 days'
-      GROUP BY DATE(entry_time AT TIME ZONE 'Asia/Ulaanbaatar')
-      ORDER BY date DESC
-      LIMIT 30
-    `);
+  SELECT 
+    TO_CHAR(entry_time, 'YYYY-MM-DD') as date,
+    COALESCE(SUM(fee), 0)::float as revenue,
+    COUNT(*)::int as vehicles
+  FROM parking_records
+  WHERE entry_time >= NOW() - INTERVAL '30 days'
+  GROUP BY TO_CHAR(entry_time, 'YYYY-MM-DD')
+  ORDER BY date DESC
+  LIMIT 30
+`);
 
     res.json({
       totalRevenue: Number(statsResult.totalRevenue ?? 0),
