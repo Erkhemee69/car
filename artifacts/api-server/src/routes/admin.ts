@@ -22,7 +22,7 @@ router.get("/stats", async (req: Request, res: Response) => {
     const statsQuery = db
       .select({
         totalRevenue: sum(parkingRecordsTable.fee),
-        totalVehicles: count(),
+        totalVehicles: count(parkingRecordsTable.id),
         averageDuration: avg(parkingRecordsTable.durationMinutes),
       })
       .from(parkingRecordsTable);
@@ -50,11 +50,13 @@ router.get("/stats", async (req: Request, res: Response) => {
       LIMIT 30
     `);
 
+    const statsResult = stats[0] || { totalRevenue: "0", totalVehicles: 0, averageDuration: "0" };
+
     res.json({
-      totalRevenue: Number(stats[0]?.totalRevenue ?? 0),
-      totalVehicles: Number(stats[0]?.totalVehicles ?? 0),
+      totalRevenue: Number(statsResult.totalRevenue ?? 0),
+      totalVehicles: Number(statsResult.totalVehicles ?? 0),
       activeVehicles: Number(activeCount[0]?.count ?? 0),
-      averageDurationMinutes: Math.round(Number(stats[0]?.averageDuration ?? 0)),
+      averageDurationMinutes: Math.round(Number(statsResult.averageDuration ?? 0)),
       revenueByDay: (revenueByDayQuery.rows as any[]).map(r => ({
         date: String(r.date),
         revenue: Number(r.revenue),

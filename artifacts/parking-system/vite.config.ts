@@ -14,7 +14,7 @@ export default defineConfig({
   server: {
     proxy: {
       "/api": {
-        target: "https://car-89l8.onrender.com",
+        target: "http://localhost:5000",
         changeOrigin: true,
       },
     },

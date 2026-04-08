@@ -12,10 +12,10 @@
     "push-force": "drizzle-kit push --force"
   },
   "dependencies": {
-    "drizzle-orm": "^0.30.0",
+    "drizzle-orm": "catalog:",
     "drizzle-zod": "^0.5.1",
     "pg": "^8.11.0",
-    "zod": "^3.22.0"
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
