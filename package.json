@@ -15,5 +15,10 @@
     "prettier": "^3.8.1",
     "cross-env": "^7.0.3",
     "concurrently": "^9.1.2"
+  },
+  "pnpm": {
+    "overrides": {
+      "drizzle-orm": "0.45.2"
+    }
   }
 }

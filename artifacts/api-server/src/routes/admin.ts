@@ -21,9 +21,9 @@ router.get("/stats", async (req: Request, res: Response) => {
     // Нийт статистик
     const statsQuery = db
       .select({
-        totalRevenue: sql<number>`COALESCE(SUM(${parkingRecordsTable.fee}), 0)`,
-        totalVehicles: sql<number>`COUNT(*)`,
-        averageDuration: sql<number>`COALESCE(AVG(${parkingRecordsTable.durationMinutes}), 0)`,
+        totalRevenue: sum(parkingRecordsTable.fee),
+        totalVehicles: count(parkingRecordsTable.id),
+        averageDuration: avg(parkingRecordsTable.durationMinutes),
       })
       .from(parkingRecordsTable);
 
