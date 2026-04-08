@@ -1,8 +1,10 @@
-import { useState, useEffect } from "react"; // useEffect нэмэв
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { format, subDays } from "date-fns";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
-import { TrendingUp, Car, Clock, Settings, Save } from "lucide-react";
+import {
+  TrendingUp, Car, Clock, Settings, Save
+} from "lucide-react";
 import {
   useGetAdminStats,
   useGetParkingRecords,
@@ -28,23 +30,6 @@ export default function AdminPage() {
   const { data: tariff } = useGetTariff();
   const { data: capacity } = useGetCapacity();
 
-  // Settings State
-  const [tariffForm, setTariffForm] = useState({ ratePerHour: 0, minimumFee: 0, freeMinutes: 0 });
-  const [capacityForm, setCapacityForm] = useState({ totalSpaces: 0 });
-
-  // ✅ ЗАСВАР: useEffect ашиглан датаг нэг удаа онооно
-  useEffect(() => {
-    if (tariff) {
-      setTariffForm(tariff);
-    }
-  }, [tariff]);
-
-  useEffect(() => {
-    if (capacity) {
-      setCapacityForm(capacity);
-    }
-  }, [capacity]);
-
   // Mutations
   const updateTariff = useUpdateTariff({
     mutation: {
@@ -65,6 +50,14 @@ export default function AdminPage() {
     }
   });
 
+  // Settings State
+  const [tariffForm, setTariffForm] = useState({ ratePerHour: 0, minimumFee: 0, freeMinutes: 0 });
+  const [capacityForm, setCapacityForm] = useState({ totalSpaces: 0 });
+
+  // Sync state when data loads
+  if (tariff && tariffForm.ratePerHour === 0) setTariffForm(tariff);
+  if (capacity && capacityForm.totalSpaces === 0) setCapacityForm(capacity);
+
   const handleSaveTariff = (e: React.FormEvent) => {
     e.preventDefault();
     updateTariff.mutate({ data: tariffForm });
@@ -76,7 +69,7 @@ export default function AdminPage() {
   };
 
   const statCards = [
-    { title: "Нийт орлого", value: `${(stats?.totalRevenue || 0).toLocaleString()} ₮`, icon: TrendingUp, color: "text-emerald-400", bg: "bg-emerald-400/10" },
+    { title: "Нийт орлого", value: `${stats?.totalRevenue.toLocaleString() || 0} ₮`, icon: TrendingUp, color: "text-emerald-400", bg: "bg-emerald-400/10" },
     { title: "Идэвхтэй машин", value: stats?.activeVehicles || 0, icon: Car, color: "text-primary", bg: "bg-primary/10" },
     { title: "Нийт үйлчлүүлсэн", value: stats?.totalVehicles || 0, icon: Car, color: "text-blue-400", bg: "bg-blue-400/10" },
     { title: "Дундаж хугацаа", value: `${stats?.averageDurationMinutes || 0} мин`, icon: Clock, color: "text-purple-400", bg: "bg-purple-400/10" },
@@ -84,7 +77,6 @@ export default function AdminPage() {
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-12">
-      {/* ... (Header болон Tab хэсэг хэвээрээ) */}
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl md:text-4xl font-display font-bold text-white mb-2">Админ удирдлага</h1>
@@ -96,8 +88,8 @@ export default function AdminPage() {
               key={tab}
               onClick={() => setActiveTab(tab)}
               className={`px-6 py-2.5 rounded-lg text-sm font-medium transition-all ${activeTab === tab
-                ? "bg-white/10 text-white shadow-sm"
-                : "text-muted-foreground hover:text-white hover:bg-white/5"
+                  ? "bg-white/10 text-white shadow-sm"
+                  : "text-muted-foreground hover:text-white hover:bg-white/5"
                 }`}
             >
               {tab === 'dashboard' && "Дашбоард"}
@@ -136,27 +128,21 @@ export default function AdminPage() {
                     fontSize={12}
                     tickLine={false}
                     axisLine={false}
-                    tickFormatter={(val) => {
-                      try {
-                        return format(new Date(val), 'MM/dd');
-                      } catch (e) {
-                        return val;
-                      }
-                    }}
+                    tickFormatter={(val) => format(new Date(val), 'MM/dd')}
                   />
                   <YAxis
                     stroke="#888888"
                     fontSize={12}
                     tickLine={false}
                     axisLine={false}
-                    tickFormatter={(val) => `${val >= 1000 ? val / 1000 + 'k' : val}`}
+                    tickFormatter={(val) => `${val / 1000}k`}
                   />
                   <Tooltip
                     cursor={{ fill: '#ffffff05' }}
                     contentStyle={{ backgroundColor: '#0f172a', border: '1px solid #1e293b', borderRadius: '12px', color: '#fff' }}
                     itemStyle={{ color: '#38bdf8' }}
                   />
-                  <Bar dataKey="revenue" fill="#38bdf8" radius={[6, 6, 0, 0]} />
+                  <Bar dataKey="revenue" fill="currentColor" className="fill-primary" radius={[6, 6, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -164,7 +150,6 @@ export default function AdminPage() {
         </motion.div>
       )}
 
-      {/* ... (Бусад Tab-ууд хэвээрээ) */}
       {activeTab === 'records' && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="glass-panel rounded-3xl border border-white/5 overflow-hidden">
           <div className="overflow-x-auto">
@@ -180,7 +165,7 @@ export default function AdminPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5">
-                {recordsData?.records.map((r: any) => (
+                {recordsData?.records.map((r) => (
                   <tr key={r.id} className="hover:bg-white/[0.02] transition-colors">
                     <td className="px-6 py-4 font-display tracking-widest font-bold text-white">{r.plateNumber}</td>
                     <td className="px-6 py-4 text-muted-foreground">{format(new Date(r.entryTime), 'MM.dd HH:mm')}</td>
@@ -189,9 +174,9 @@ export default function AdminPage() {
                     <td className="px-6 py-4 font-medium">{r.fee ? `${r.fee.toLocaleString()} ₮` : '-'}</td>
                     <td className="px-6 py-4">
                       <span className={`px-3 py-1 text-xs font-medium rounded-full border ${r.status === 'active' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
-                        r.status === 'pending_payment' ? 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20' :
-                          r.status === 'paid' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' :
-                            'bg-slate-500/10 text-slate-400 border-slate-500/20'
+                          r.status === 'pending_payment' ? 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20' :
+                            r.status === 'paid' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' :
+                              'bg-slate-500/10 text-slate-400 border-slate-500/20'
                         }`}>
                         {r.status === 'active' ? 'Идэвхтэй' :
                           r.status === 'pending_payment' ? 'Төлбөр хүлээж' :
@@ -200,6 +185,11 @@ export default function AdminPage() {
                     </td>
                   </tr>
                 ))}
+                {!recordsData?.records.length && (
+                  <tr>
+                    <td colSpan={6} className="px-6 py-12 text-center text-muted-foreground">Бичлэг олдсонгүй</td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
@@ -208,8 +198,13 @@ export default function AdminPage() {
 
       {activeTab === 'settings' && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+
           <div className="glass-panel rounded-3xl p-8 border border-white/5">
-            <h2 className="text-xl font-semibold text-white mb-6">Тарифын тохиргоо</h2>
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-2 bg-primary/20 text-primary rounded-lg"><Settings className="w-5 h-5" /></div>
+              <h2 className="text-xl font-semibold text-white">Тарифын тохиргоо</h2>
+            </div>
+
             <form onSubmit={handleSaveTariff} className="space-y-6">
               <div className="space-y-2">
                 <label className="text-sm font-medium text-muted-foreground">Цагийн тариф (₮)</label>
@@ -217,15 +212,63 @@ export default function AdminPage() {
                   type="number"
                   value={tariffForm.ratePerHour}
                   onChange={e => setTariffForm({ ...tariffForm, ratePerHour: Number(e.target.value) })}
-                  className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none"
+                  className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary transition-colors"
                 />
               </div>
-              <button type="submit" className="w-full py-4 rounded-xl bg-primary text-white font-medium flex items-center justify-center gap-2">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-muted-foreground">Үнэгүй хугацаа (мин)</label>
+                <input
+                  type="number"
+                  value={tariffForm.freeMinutes}
+                  onChange={e => setTariffForm({ ...tariffForm, freeMinutes: Number(e.target.value) })}
+                  className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary transition-colors"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-muted-foreground">Хамгийн бага хураамж (₮)</label>
+                <input
+                  type="number"
+                  value={tariffForm.minimumFee}
+                  onChange={e => setTariffForm({ ...tariffForm, minimumFee: Number(e.target.value) })}
+                  className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary transition-colors"
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={updateTariff.isPending}
+                className="w-full py-4 rounded-xl bg-primary hover:bg-primary/90 text-white font-medium flex items-center justify-center gap-2 transition-all shadow-lg shadow-primary/20"
+              >
                 <Save className="w-4 h-4" /> Хадгалах
               </button>
             </form>
           </div>
-          {/* ... Capacity хэсгийг мөн адил үргэлжлүүлнэ */}
+
+          <div className="glass-panel rounded-3xl p-8 border border-white/5 h-max">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-2 bg-blue-500/20 text-blue-400 rounded-lg"><Car className="w-5 h-5" /></div>
+              <h2 className="text-xl font-semibold text-white">Багтаамжийн тохиргоо</h2>
+            </div>
+
+            <form onSubmit={handleSaveCapacity} className="space-y-6">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-muted-foreground">Нийт зогсоолын тоо</label>
+                <input
+                  type="number"
+                  value={capacityForm.totalSpaces}
+                  onChange={e => setCapacityForm({ ...capacityForm, totalSpaces: Number(e.target.value) })}
+                  className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500 transition-colors"
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={updateCapacity.isPending}
+                className="w-full py-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-medium flex items-center justify-center gap-2 transition-all shadow-lg shadow-blue-600/20"
+              >
+                <Save className="w-4 h-4" /> Хадгалах
+              </button>
+            </form>
+          </div>
+
         </motion.div>
       )}
     </div>
